@@ -90,42 +90,52 @@ app.get('/v0/:coin', async (req, res) => {
   const sevenDays = now.minus({days: 7})
   const month = now.minus({months: 1})
 
-  const coinPrice = await getCoinPrice(coin)
-  const currentPrice = coinPrice[coin]['usd']
+  try {
+    const coinPrice = await getCoinPrice(coin)
+    const currentPrice = coinPrice[coin]['usd']
 
-  const yesterdayResult = await getCoinHistoryPrice(coin, yesterday.toFormat('dd-MM-yyyy'))
-  const price24h = yesterdayResult['market_data']['current_price']['usd']
-  const change24h = (currentPrice - price24h) / price24h * 100
+    const yesterdayResult = await getCoinHistoryPrice(coin, yesterday.toFormat('dd-MM-yyyy'))
+    const price24h = yesterdayResult['market_data']['current_price']['usd']
+    const change24h = (currentPrice - price24h) / price24h * 100
 
-  const name = yesterdayResult['name']
-  const symbol = yesterdayResult['symbol'].toUpperCase()
+    const name = yesterdayResult['name']
+    const symbol = yesterdayResult['symbol'].toUpperCase()
 
-  const sevenDaysResult = await getCoinHistoryPrice(coin, sevenDays.toFormat('dd-MM-yyyy'))
-  const price7d = sevenDaysResult['market_data']['current_price']['usd']
-  const change7d = (currentPrice - price7d) / price7d * 100
+    const sevenDaysResult = await getCoinHistoryPrice(coin, sevenDays.toFormat('dd-MM-yyyy'))
+    const price7d = sevenDaysResult['market_data']['current_price']['usd']
+    const change7d = (currentPrice - price7d) / price7d * 100
 
-  const monthResult = await getCoinHistoryPrice(coin, month.toFormat('dd-MM-yyyy'))
-  const price1m = monthResult['market_data']['current_price']['usd']
-  const change1m = (currentPrice - price1m) / price1m * 100
+    const monthResult = await getCoinHistoryPrice(coin, month.toFormat('dd-MM-yyyy'))
+    const price1m = monthResult['market_data']['current_price']['usd']
+    const change1m = (currentPrice - price1m) / price1m * 100
 
-  const marketResult = await getCoinMarketData(coin)
+    const marketResult = await getCoinMarketData(coin)
 
-  const response = {
-    error: false,
-    data: {
-      coinPrice: {
-        name,
-        symbol,
-        currentPrice,
-        change24H: change24h,
-        change7D: change7d,
-        change1M: change1m,
-      },
-      marketData: marketResult,
+    const response = {
+      error: false,
+      data: {
+        coinPrice: {
+          name,
+          symbol,
+          currentPrice,
+          change24H: change24h,
+          change7D: change7d,
+          change1M: change1m,
+        },
+        marketData: marketResult,
+      }
     }
+
+    res.send(JSON.stringify(response))
+  } catch (e) {
+    res.sendStatus(500)
+    res.json({
+      error: true,
+      message: 'Server Error: ' + e.message
+    })
   }
 
-  res.send(JSON.stringify(response))
+
 })
 
 app.listen(port, () => {
