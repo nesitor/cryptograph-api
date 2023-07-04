@@ -20,7 +20,6 @@ const httpsGetRequest = (url, params) => {
   if (params) {
     url += '?' + encodeGetParams(params)
   }
-  console.log('url', url)
   return new Promise((resolve, reject) => {
     https.get(url, (resp) => {
       let data = ''
@@ -30,7 +29,6 @@ const httpsGetRequest = (url, params) => {
       })
 
       resp.on('end', () => {
-        console.log('data', data)
         resolve(data)
       })
 
@@ -49,7 +47,6 @@ const getCoinPrice = async (coin) => {
   }
 
   const response = await httpsGetRequest(url, params)
-  console.log('Response', response)
   return JSON.parse(response)
 }
 
