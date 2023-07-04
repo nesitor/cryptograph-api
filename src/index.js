@@ -97,6 +97,9 @@ app.get('/v0/:coin', async (req, res) => {
   const price24h = yesterdayResult['market_data']['current_price']['usd']
   const change24h = (currentPrice - price24h) / price24h * 100
 
+  const name = yesterdayResult['name']
+  const symbol = yesterdayResult['symbol'].toUpperCase()
+
   const sevenDaysResult = await getCoinHistoryPrice(coin, sevenDays.toFormat('dd-MM-yyyy'))
   const price7d = sevenDaysResult['market_data']['current_price']['usd']
   const change7d = (currentPrice - price7d) / price7d * 100
@@ -111,6 +114,8 @@ app.get('/v0/:coin', async (req, res) => {
     error: false,
     data: {
       coinPrice: {
+        name,
+        symbol,
         currentPrice,
         change24H: change24h,
         change7D: change7d,
