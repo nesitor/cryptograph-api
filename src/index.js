@@ -2,7 +2,7 @@ const https = require('https')
 const express = require('express')
 const { DateTime } = require("luxon")
 const app = express()
-const port = 3000
+const port = 8080
 
 const coinGeckoAPI = 'https://api.coingecko.com/api/v3/'
 const priceUrl = 'simple/price'
