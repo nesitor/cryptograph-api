@@ -44,6 +44,7 @@ const getCoinPrice = async (coin) => {
   const params = {
     ids: coin,
     vs_currencies: 'usd',
+    include_24hr_change: true
   }
 
   const response = await httpsGetRequest(url, params)
@@ -78,7 +79,7 @@ app.get('/v0/:coin', async (req, res) => {
   const coin = req.params.coin
 
   if (coin === undefined) {
-    res.sendStatus(403)
+    res.status(403)
     res.json({
       error: true,
       message: 'Invalid coin requested'
@@ -86,30 +87,39 @@ app.get('/v0/:coin', async (req, res) => {
   }
 
   const now = DateTime.now()
-  const yesterday = now.minus({days: 1})
   const sevenDays = now.minus({days: 7})
   const month = now.minus({months: 1})
 
   try {
     const coinPrice = await getCoinPrice(coin)
+    if (coinPrice[coin] === undefined) {
+      throw new Error(coinPrice['status']['error_message'])
+    }
+
     const currentPrice = coinPrice[coin]['usd']
-
-    const yesterdayResult = await getCoinHistoryPrice(coin, yesterday.toFormat('dd-MM-yyyy'))
-    const price24h = yesterdayResult['market_data']['current_price']['usd']
-    const change24h = (currentPrice - price24h) / price24h * 100
-
-    const name = yesterdayResult['name']
-    const symbol = yesterdayResult['symbol'].toUpperCase()
+    const change24h = coinPrice[coin]['usd_24h_change']
 
     const sevenDaysResult = await getCoinHistoryPrice(coin, sevenDays.toFormat('dd-MM-yyyy'))
+    if (sevenDaysResult['market_data'] === undefined) {
+      throw new Error(sevenDaysResult['status']['error_message'])
+    }
     const price7d = sevenDaysResult['market_data']['current_price']['usd']
     const change7d = (currentPrice - price7d) / price7d * 100
 
+    const name = sevenDaysResult['name']
+    const symbol = sevenDaysResult['symbol'].toUpperCase()
+
     const monthResult = await getCoinHistoryPrice(coin, month.toFormat('dd-MM-yyyy'))
+    if (monthResult['market_data'] === undefined) {
+      throw new Error(monthResult['status']['error_message'])
+    }
     const price1m = monthResult['market_data']['current_price']['usd']
     const change1m = (currentPrice - price1m) / price1m * 100
 
     const marketResult = await getCoinMarketData(coin)
+    if (marketResult['prices'] === undefined) {
+      throw new Error(marketResult['status']['error_message'])
+    }
 
     const response = {
       error: false,
@@ -126,9 +136,9 @@ app.get('/v0/:coin', async (req, res) => {
       }
     }
 
-    res.send(JSON.stringify(response))
+    res.json(response)
   } catch (e) {
-    res.sendStatus(500)
+    res.status(500)
     res.json({
       error: true,
       message: 'Server Error: ' + e.message
